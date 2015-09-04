@@ -1,0 +1,101 @@
+<html>
+
+
+<head>
+
+
+</head>
+
+
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+
+
+<body>
+<a href="#" id="checkBatt">This should show battery data level! </a>
+<br><br>
+<a href="#" id="checkAll">This should show all services! </a>
+
+</body>
+<script>
+
+$( "#checkBatt" ).click(function() {
+  console.log("CLICKED");
+  onButtonClick();
+});
+
+$( "#checkAll" ).click(function() {
+  console.log("CLICKED");
+
+    checkAllServices();
+});
+
+
+
+function onButtonClick() {
+  'use strict';
+
+   console.log('Requesting Bluetooth Device...');
+ ///navigator.bluetooth.requestDevice({filters:[{services:['battery_service']}])
+  navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
+/// navigator.bluetooth.requestDevice({ filters: [{ services: ['battery_service'] }] })
+  .then(device => device.connectGATT())
+  .then(server => {
+    // Getting Battery Service...
+    return server.getPrimaryService('battery_service');
+  })
+  .then(service => {
+    if (!service) throw 'Battery Service not found';
+    // Getting Battery Level Characteristic...
+    return service.getCharacteristic('battery_level');
+  })
+  .then(characteristic => {
+    // Reading Battery Level...
+    return characteristic.readValue();
+  })
+  .then(buffer => {
+    var data = new DataView(buffer);
+    console.log('Battery percentage is ' + data.getUint8(0));
+  })
+  .catch(error => { console.log(error); });
+ 
+};
+
+ function checkAllServices() {
+
+
+    console.log('Requesting Bluetooth Device...');
+
+
+    navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
+    .then(device => {
+       console.log('> Device Name:       ' + device.name);
+       console.log('> Device InstanceID: ' + device.instanceID);
+       console.log('> Device Paired:     ' + device.paired);
+       console.log('> Device Class:      ' + device.deviceClass);
+       console.log('> Wearduino Device UUIDs:      ' + device.uuids.join('\n' + ' '.repeat(21)));
+
+
+        for(var propertyName in device) {
+           console.log('PROPERTY: ' + propertyName);
+
+        }
+        
+    })
+    .then(service => {
+        for(var propertyName in service) {
+           console.log('PROPERTY: ' + propertyName);
+
+        }
+       ///  console.log('> BATTERY DATA: ' + service.characteristic('battery_level'));
+
+    })
+    .catch(error => {
+     console.log('Argh! ' + error);
+  });
+};
+
+
+</script>
+
+</html>
