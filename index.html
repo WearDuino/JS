@@ -12,56 +12,69 @@
 
 
 <body>
-<a href="#" id="checkBatt">This should show battery data level! </a>
+<a href="#" id="checkServ">GetServices! </a>
 <br><br>
-<a href="#" id="checkAll">This should show all services! </a>
+<a href="#" id="checkAll">This should show device info! </a>
+<br><br>
+<a href="#" id="checkRec">This should show received data! </a>
+<br><br>
 
 </body>
 <script>
-
-$( "#checkBatt" ).click(function() {
-  console.log("CLICKED");
-  onButtonClick();
-});
-
-$( "#checkAll" ).click(function() {
-  console.log("CLICKED");
+$( "#checkServ" ).click(function() {
+  console.log("Show Serivces");
 
     checkAllServices();
 });
 
+$( "#checkAll" ).click(function() {
+  console.log("Show Device info");
+
+    checkDeviceInfo();
+});
+
+$( "#checkRec" ).click(function() {
+  console.log("Check RECEIVE data");
+
+    checkReceived();
+});
+
+/*
+Wearduino Service UUID:  30dff168-62de-11e4-b116-123b93f75cba
+WearDuino Receive Data UUID: 30dff169-62de-11e4-b116-123b93f75cba
+WearDuino Send Command UUID: 30dff16A-62de-11e4-b116-123b93f75cba
+WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
 
 
-function onButtonClick() {
-  'use strict';
+*/
+ function checkAllServices() {
 
-   console.log('Requesting Bluetooth Device...');
- ///navigator.bluetooth.requestDevice({filters:[{services:['battery_service']}])
-  navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
-/// navigator.bluetooth.requestDevice({ filters: [{ services: ['battery_service'] }] })
-  .then(device => device.connectGATT())
-  .then(server => {
-    // Getting Battery Service...
-    return server.getPrimaryService('battery_service');
-  })
-  .then(service => {
-    if (!service) throw 'Battery Service not found';
-    // Getting Battery Level Characteristic...
-    return service.getCharacteristic('battery_level');
-  })
-  .then(characteristic => {
-    // Reading Battery Level...
-    return characteristic.readValue();
-  })
-  .then(buffer => {
-    var data = new DataView(buffer);
-    console.log('Battery percentage is ' + data.getUint8(0));
-  })
-  .catch(error => { console.log(error); });
- 
+
+    console.log('Requesting Bluetooth Device...');
+
+
+    navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
+     .then(device => device.connectGATT())
+    .then(server => {
+      // Getting data Service...
+      return server.getServices();
+    })
+  // */
+   .then(server => {
+    for(var propertyName in server) {
+           console.log('Service: ' + propertyName);
+
+        }
+
+   })
+    .catch(error => {
+      /// IF THE DEVICE ID IS WRONG< WILL RETURN A 'NO DEVICES IN RANGE' ERROR
+     console.log('error! ' + error);
+  });
+
 };
 
- function checkAllServices() {
+ function checkDeviceInfo() {
 
 
     console.log('Requesting Bluetooth Device...');
@@ -87,12 +100,53 @@ function onButtonClick() {
            console.log('PROPERTY: ' + propertyName);
 
         }
-       ///  console.log('> BATTERY DATA: ' + service.characteristic('battery_level'));
+      
 
     })
     .catch(error => {
+      /// IF THE DEVICE ID IS WRONG< WILL RETURN A 'NO DEVICES IN RANGE' ERROR
      console.log('Argh! ' + error);
   });
+};
+
+
+
+///////////////
+
+
+ function checkReceived() {
+   console.log('Requesting Bluetooth Device...');
+    navigator.bluetooth.requestDevice({ filters: [{ services: ['30dff168-62de-11e4-b116-123b93f75cba'] }] })
+
+    //// WILL RETURN A 'NotFoundError' IF THE SERVICE ID IS WRONG
+
+   ///* SERVICE IS NOT GATT SO WE CAN"T QUERY IT
+    .then(device => device.connectGATT())
+    .then(server => {
+      // Getting data Service...
+      return server.getServices();
+    })
+  // */
+   .then(device => device.getCharacteristic({ filters: [{ characteristic: ['30dff168-62de-11e4-b116-123b93f75cba'] }] }))
+   ///*
+    .then(service => {
+      if (!service) throw 'RECEIVE DATA Service not found';
+      // Getting data Characteristic...
+      return service.getPrimaryCharacteristic('00805f9b34fb');
+    })
+//*/
+    .then(characteristic => {
+      // Reading data...
+      return characteristic.readValue();
+    })
+    .then(buffer => {
+      var data = new DataView(buffer);
+      console.log('RECEIVED DATA is ' + data.getUint8(0));
+    })
+    .catch(error => { console.log("Error getting data: " + error); });
+
+
+
 };
 
 
