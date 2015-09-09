@@ -12,6 +12,8 @@
 
 
 <body>
+  <a href="#" id="checkSamp">SAMPLE SERVICE CHECK! </a>
+<br><br>
 <a href="#" id="checkServ">GetServices! </a>
 <br><br>
 <a href="#" id="checkAll">This should show device info! </a>
@@ -21,6 +23,11 @@
 
 </body>
 <script>
+$( "#checkSamp" ).click(function() {
+  console.log("Sample Service Check");
+
+    sampleService();
+});
 $( "#checkServ" ).click(function() {
   console.log("Show Serivces");
 
@@ -45,8 +52,100 @@ WearDuino Receive Data UUID: 30dff169-62de-11e4-b116-123b93f75cba
 WearDuino Send Command UUID: 30dff16A-62de-11e4-b116-123b93f75cba
 WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
 
+/// other UUIDS
+00001800-0000-1000-8000-00805f9b34fb
+00001801-0000-1000-8000-00805f9b34fb
+30dff168-62de-11e4-b116-123b93f75cba
+
+8bit UUIDs:
+Generic access/Primary Service
+0x1800
+Generic attribute/Primary Service
+0x1801
+*/
+/*
+navigator.bluetooth.requestDevice({
+  filters: [{
+    services: ['heart_rate'],
+  }]
+}).then(device => device.connectGATT())
+.then(server => server.getPrimaryService('heart_rate'))
+.then(service => {
+  chosenHeartRateService = service;
+  return Promise.all([
+    service.getCharacteristic('body_sensor_location')
+      .then(handleBodySensorLocationCharacteristic),
+    service.getCharacteristic('heart_rate_measurement'))
+      .then(handleHeartRateMeasurementCharacteristic),
+  ]);
+});
+*/
+
+function sampleService(){
+  'use strict';
+  console.log('Requesting Bluetooth Device...');
+
+  navigator.bluetooth.requestDevice({filters: [{services: [0x1800, 0x1801,'30dff168-62de-11e4-b116-123b93f75cba']}]})
+  .then(device => device.connectGATT())
+  .then(server => server.getPrimaryService('30dff169-62de-11e4-b116-123b93f75cba'))
+  .then(service => service.getCharacteristic('30dff169-62de-11e4-b116-123b93f75cba'))
+  .then(characteristic => characteristic.readValue())
+  .then(buffer => {
+
+    let data = new DataView(buffer);
+    let batteryLevel = data.getUint8(0);
+    console.log(batteryLevel);
+
+  }).catch(error => {
+    console.log('Error! ' + error);
+  });
+  
+/*
+  navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
+  .then(device => {
+    console.log('> Found ' + device.name);
+    console.log('Connecting to GATT Server...');
+    return device.connectGATT();
+  })
+  .then(server => {
+    console.log('Getting Primary Service...');
+    return server.getPrimaryService('30dff169-62de-11e4-b116-123b93f75cba');
+  })
+  .then(service => {
+    if (!service) {
+      throw 'Primary Service not found';
+    }
+    console.log('Getting Primary Service Characteristic...');
+    return service.getCharacteristic('30dff169-62de-11e4-b116-123b93f75cba');
+  })
+  .then(characteristic => {
+     console.log('Reading Receive char...');
+     return characteristic.readValue();
+  })
+  .then(buffer => {
+    let data = new DataView(buffer);
+    let batteryLevel = data.getUint8(0);
+    console.log('> You can has ' + batteryLevel + '%');
+  })
+  .catch(error => {
+    console.log('Argh! ' + error);
+  });
+
 
 */
+};
+
+
+function handleWearduinoRead(characteristic){
+
+  console.log("sucess" + characteristic);
+  
+}
+function handleWearDuinoWrite(characteristic){
+
+  console.log("sucess" + characteristic);
+
+}
  function checkAllServices() {
 
 
@@ -57,7 +156,7 @@ WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
      .then(device => device.connectGATT())
     .then(server => {
       // Getting data Service...
-      return server.getServices();
+      return device.getServices();
     })
   // */
    .then(server => {
@@ -79,7 +178,7 @@ WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
 
     console.log('Requesting Bluetooth Device...');
 
-
+  
     navigator.bluetooth.requestDevice({filters:[{services:['30dff168-62de-11e4-b116-123b93f75cba']}]})
     .then(device => {
        console.log('> Device Name:       ' + device.name);
@@ -87,32 +186,33 @@ WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
        console.log('> Device Paired:     ' + device.paired);
        console.log('> Device Class:      ' + device.deviceClass);
        console.log('> Wearduino Device UUIDs:      ' + device.uuids.join('\n' + ' '.repeat(21)));
-
+       console.log('> Device Serv:      ' + device.getServices());
 
         for(var propertyName in device) {
            console.log('PROPERTY: ' + propertyName);
 
         }
+        console.log("LIST OF SERVICES: " + device.getServices('30dff168-62de-11e4-b116-123b93f75cba'));
         
-    })
-    .then(service => {
-        for(var propertyName in service) {
-           console.log('PROPERTY: ' + propertyName);
-
-        }
-      
-
     })
     .catch(error => {
       /// IF THE DEVICE ID IS WRONG< WILL RETURN A 'NO DEVICES IN RANGE' ERROR
      console.log('Argh! ' + error);
   });
+
 };
 
 
 
 ///////////////
+/*
+Wearduino Service UUID:  30dff168-62de-11e4-b116-123b93f75cba
+WearDuino Receive Data UUID: 30dff169-62de-11e4-b116-123b93f75cba
+WearDuino Send Command UUID: 30dff16A-62de-11e4-b116-123b93f75cba
+WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
 
+
+*/
 
  function checkReceived() {
    console.log('Requesting Bluetooth Device...');
@@ -127,12 +227,12 @@ WearDuino Disconnect UUID: 30dff16B-62de-11e4-b116-123b93f75cba
       return server.getServices();
     })
   // */
-   .then(device => device.getCharacteristic({ filters: [{ characteristic: ['30dff168-62de-11e4-b116-123b93f75cba'] }] }))
+   .then(device => device.getCharacteristic({ filters: [{ characteristic: ['30dff169-62de-11e4-b116-123b93f75cba'] }] }))
    ///*
     .then(service => {
       if (!service) throw 'RECEIVE DATA Service not found';
       // Getting data Characteristic...
-      return service.getPrimaryCharacteristic('00805f9b34fb');
+      return service.getPrimaryCharacteristic('30dff169-62de-11e4-b116-123b93f75cba');
     })
 //*/
     .then(characteristic => {
